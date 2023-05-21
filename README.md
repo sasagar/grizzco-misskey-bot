@@ -1,5 +1,7 @@
 # Grizzco Misskey-bot
 
+![GitHub package.json version (subfolder of monorepo)](https://img.shields.io/github/package-json/v/sasagar/grizzco-misskey-bot?style=for-the-badge) ![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/sasagar/grizzco-misskey-bot?include_prereleases&style=for-the-badge)
+
 ## What
 
 Post Grizzco (Co-op mode of Splatoon 3 a.k.a. Salmon Run Next Wave) schedule to Misskey.
