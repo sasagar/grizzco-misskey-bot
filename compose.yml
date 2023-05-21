@@ -4,3 +4,4 @@ services:
     restart: always
     volumes:
       - .env:/usr/src/app/.env:ro
+      - ./JSON:/usr/src/app/JSON
