@@ -15,6 +15,7 @@ services:
     restart: always
     volumes:
       - .env:/usr/src/app/.env:ro
+      - ./JSON:/usr/src/app/JSON
 ```
 
 Put the `.env` file at the same directory you make `compose.yml`.  
