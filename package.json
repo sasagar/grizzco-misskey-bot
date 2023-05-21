@@ -1,0 +1,37 @@
+{
+  "name": "grizzco-misskey-bot",
+  "version": "1.0.0-beta1",
+  "description": "Misskeyにスケジュール更新を流すBotです。",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sasagar/grizzco-misskey-bot.git"
+  },
+  "author": "@sasagar",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/sasagar/grizzco-misskey-bot/issues"
+  },
+  "homepage": "https://github.com/sasagar/grizzco-misskey-bot#readme",
+  "dependencies": {
+    "axios": "^1.4.0",
+    "date-fns": "^2.30.0",
+    "date-fns-tz": "^2.0.0",
+    "dotenv": "^16.0.3",
+    "misskey-js": "^0.0.15",
+    "node-schedule": "^2.1.1"
+  },
+  "devDependencies": {
+    "eslint": "^8.40.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-vue": "^9.12.0",
+    "prettier": "^2.8.8"
+  }
+}

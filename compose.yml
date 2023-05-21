@@ -1,0 +1,6 @@
+services:
+  grizzco-misskey-bot:
+    build: .
+    restart: always
+    volumes:
+      - .env:/usr/src/app/.env:ro
