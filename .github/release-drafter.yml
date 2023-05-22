@@ -31,24 +31,26 @@ version-resolver:
 autolabeler:
   - label: feature
     title:
-      - '/^feat(ure)?[/-].+/'
+      - '/^feat(ure)?:.+/'
   - label: bug
     title:
-      - '/^fix[/-].+/'
+      - '/^fix:.+/'
+      - '/^bug:.+/'
   - label: chore
-    branch:
-      - '/^chore[/-].+/'
+    title:
+      - '/^chore:.+/'
+      - '/^dependencies:.+/'
   - label: refactor
     title:
-      - '/(refactor|refactoring)[/-].+/'
+      - '/(refactor|refactoring):.+/'
   - label: documentation
     title:
-      - '/doc(umentation)[/-].+/'
+      - '/doc(umentation):.+/'
     files:
       - '*.md'
   - label: enhancement
     title:
-      - '/(enhancement|improve)[/-].+/'
+      - '/(enhancement|improve):.+/'
 template: |
   ## Changes
 
