@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import * as Misskey from 'misskey-js';
 import axios from 'axios';
 import fs from 'fs';
@@ -9,7 +10,7 @@ import * as dotenv from 'dotenv';
 
 // 設定項目読み込み
 dotenv.config();
-const { BOT_TOKEN, MISSKEY_URL, JSON_URL } = process.env;
+const { BOT_TOKEN, MISSKEY_URL, JSON_URL, npm_package_version } = process.env;
 
 // Misskeyへ接続
 const cli = new Misskey.api.APIClient(
@@ -459,3 +460,10 @@ const salmonrunextra = async () => {
 const salmonjob = schedule.scheduleJob('0 0 1-23/2 * * *', () => { salmonrun() });
 
 // salmonrun();
+
+// 起動時メッセージ
+const upNotice = () => {
+    sendMessage(`【Bot再起動通知】v${npm_package_version} で起動しました。`);
+}
+
+upNotice();
