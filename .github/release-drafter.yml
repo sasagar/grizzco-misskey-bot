@@ -7,11 +7,14 @@ categories:
       - 'enhancement'
   - title: '🐛 Bug Fixes'
     labels:
-      - 'fix'
-      - 'bugfix'
       - 'bug'
   - title: '🧰 Maintenance'
-    label: 'chore'
+    labels:
+      - 'chore'
+      - 'refactor'
+  - title: '📒 Documentation'
+    labels:
+      - 'documentation'
 change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
 change-title-escapes: '\<*_&' # You can add # and @ to disable mentions, and add ` to disable code blocks.
 version-resolver:
@@ -25,6 +28,27 @@ version-resolver:
     labels:
       - 'patch'
   default: patch
+autolabeler:
+  - label: feature
+    title:
+      - '/^feat(ure)?[/-].+/'
+  - label: bug
+    title:
+      - '/^fix[/-].+/'
+  - label: chore
+    branch:
+      - '/^chore[/-].+/'
+  - label: refactor
+    title:
+      - '/(refactor|refactoring)[/-].+/'
+  - label: documentation
+    title:
+      - '/doc(umentation)[/-].+/'
+    files:
+      - '*.md'
+  - label: enhancement
+    title:
+      - '/(enhancement|improve)[/-].+/'
 template: |
   ## Changes
 
