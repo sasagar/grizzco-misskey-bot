@@ -20,95 +20,63 @@ const cli = new Misskey.api.APIClient(
 
 // ステージのバッジを選べるように
 const stageBadges = JSON.parse(fs.readFileSync('./JSON/stages.json'));
-// const stageBadges = {
-//     "ムニ・エール海洋発電所": ":gone_fission_hydroplant:",
-//     "アラマキ砦": ":sockeye_station:",
-//     "シェケナダム": ":spawning_grounds:",
-//     "難破船ドン・ブラコ": ":marooners_bay:"
-// }
 
 // 追加用のスケジューラーを空で用意
 let salmonjobExtra;
 
 // ブキのバッジを選べるように
 const weaponBadges = JSON.parse(fs.readFileSync('./JSON/weapons.json'));
-// const weaponBadges = {
-//     "ボールドマーカー": ":sploosh_o_matic:",
-//     "スプラシューター": ":splattershot:",
-//     "わかばシューター": ":splattershot_jr:",
-//     "シャープマーカー": ":splash_o_matic:",
-//     "プロモデラーMG": ":aerospray_mg:",
-//     "N-ZAP85": ":n_zap85:",
-//     ".52ガロン": ":52gal:",
-//     ".96ガロン": ":96gal:",
-//     "プライムシューター": ":splattershot_pro:",
-//     "ジェットスイーパー": ":jet_squelcher:",
-//     "スペースシューター": ":splattershot_nova:",
-//     "L3リールガン": ":l3_nozzlenose:",
-//     "H3リールガン": ":h3_nozzlenose:",
-//     "ボトルガイザー": ":squeezer:",
-//     "スプラマニューバー": ":splat_dualies:",
-//     "スパッタリー": ":dapple_dualies:",
-//     "クアッドホッパーブラック": ":dark_tetra_dualies:",
-//     "ケルビン525": ":glooga_dualies:",
-//     "デュアルスイーパー": ":dualie_squelchers:",
-//     "ノヴァブラスター": ":luna_blaster:",
-//     "ホットブラスター": ":blaster:",
-//     "ロングブラスター": ":range_blaster:",
-//     "クラッシュブラスター": ":clash_blaster:",
-//     "ラピッドブラスター": ":rapid_blaster:",
-//     "Rブラスターエリート": ":rapid_blaster_pro",
-//     "スプラスピナー": ":mini_splatling:",
-//     "バレルスピナー": ":heavy_splatling:",
-//     "ノーチラス47": ":nautilus47:",
-//     "クーゲルシュライバー": ":ballpoint_splatling:",
-//     "ハイドラント": ":hydra_splatling:",
-//     "スプラチャージャー": ":splat_charger:",
-//     "14式竹筒銃・甲": ":banboozler14mk1:",
-//     "ソイチューバー": ":goo_tuber:",
-//     "スクイックリンα": ":classic_squiffer:",
-//     "リッター4K": ":e_liter4k:",
-//     "R-PEN/5H": ":snipewriter5h:",
-//     "トライストリンガー": ":tri_stringer:",
-//     "LACT-450": ":lact_450:",
-//     "カーボンローラー": ":carbon_roller:",
-//     "スプラローラー": ":splat_roller:",
-//     "ヴァリアブルローラー": ":flingza_roller:",
-//     "ダイナモローラー": ":dynamo_roller:",
-//     "ワイドローラー": ":big_swig_roller:",
-//     "パブロ": ":inkbrush:",
-//     "ホクサイ": ":octobrush:",
-//     "バケットスロッシャー": ":slosher:",
-//     "スクリュースロッシャー": ":sloshing_machine:",
-//     "オーバーフロッシャー": ":bloblobber:",
-//     "エクスプロッシャー": ":explosher:",
-//     "パラシェルター": ":splat_brella:",
-//     "キャンピングシェルター": ":tenta_brella:",
-//     "スパイガジェット": ":undercover_brella:",
-//     "ドライブワイパー": ":splatana_wiper:",
-//     "ジムワイパー": ":splatana_stamper:",
-//     "ランダム": ":random_green:"
-// }
 
 // 現在時刻を取得する
 const getNowUnixTime = () => {
     const now = Date.now() / 1000;
     return now;
 }
+
+// ステージバッジ存在チェック
+const stageBadgeIdMaker = (name) => {
+    let result;
+
+    if (Reflect.has(stageBadges, name)) {
+        result = stageBadges[name];
+    } else {
+        result = "";
+    }
+
+    return result;
+}
+
+// ブキバッジ存在チェック
+const weaponBadgeIdMaker = (name) => {
+    let result;
+
+    if (Reflect.has(weaponBadges, name)) {
+        result = weaponBadges[name];
+    } else {
+        result = name;
+    }
+
+    return result;
+}
+
+
 // 今のシフトメッセージメーカー
 const messageMakerNow = (shift, restOfHours) => {
     console.log('func: messageMakerNow');
+    const stageBadge = stageBadgeIdMaker(shift.stage);
+
     let msg = "";
     msg += ":grizzco_bronze: **ただいまのシフト**";
     msg += ` 残りおよそ **${restOfHours}時間**`;
     msg += "\n";
-    msg += `ステージ: ${stageBadges[shift.stage]} **${shift.stage}**`;
+    msg += `ステージ: ${stageBadge} **${shift.stage}**`;
     msg += "\n";
 
     // ブキを並べる
     msg += "支給ブキ: ";
     shift.weapons.forEach(weapon => {
-        msg += weaponBadges[weapon.name];
+        const weaponBadge = weaponBadgeIdMaker(weapon.name);
+        msg += weaponBadge;
         msg += " ";
     });
     msg += "\n";
@@ -122,19 +90,22 @@ const messageMakerNow = (shift, restOfHours) => {
 // 今のシフトまもなく終了バージョン
 const messageMakerNowInAnHour = (shift) => {
     console.log('func: messageMakerNowInAnHour');
+    const stageBadge = stageBadgeIdMaker(shift.stage);
+
     let msg = "";
     let random = false;
     msg += "$[shake まもなく終了！]";
     msg += ":grizzco_bronze: **ただいまのシフト**";
     msg += " 残りおよそ **1時間**";
     msg += "\n";
-    msg += `ステージ: ${stageBadges[shift.stage]} **${shift.stage}**`;
+    msg += `ステージ: ${stageBadge} **${shift.stage}**`;
     msg += "\n";
 
     // ブキを並べる
     msg += "支給ブキ: ";
     shift.weapons.forEach(weapon => {
-        msg += weaponBadges[weapon.name];
+        const weaponBadge = weaponBadgeIdMaker(weapon.name);
+        msg += weaponBadge;
         msg += " ";
         if (weapon.name === 'ランダム') {
             random = true;
@@ -143,7 +114,6 @@ const messageMakerNowInAnHour = (shift) => {
     if (random) {
         msg += "\n";
         msg += '<small>ランダムはクマブキランダムの場合があります。</small>';
-
     }
     msg += "\n";
 
@@ -156,19 +126,22 @@ const messageMakerNowInAnHour = (shift) => {
 // 次のシフトメッセージメーカー
 const messageMakerNext = (shift) => {
     console.log('func: messageMakerNext');
+    const stageBadge = stageBadgeIdMaker(shift.stage);
+
     let msg = "";
     let random = false;
     msg += ":grizzco_bronze: **次のシフト**";
     msg += "\n";
     msg += `${format(utcToZonedTime(new Date(shift.startunix * 1000), 'Asia/Tokyo'), 'M月d日(E) HH:mm', { locale: ja })}スタート！`;
     msg += "\n";
-    msg += `ステージ: ${stageBadges[shift.stage]} **${shift.stage}**`;
+    msg += `ステージ: ${stageBadge} **${shift.stage}**`;
     msg += "\n";
 
     // ブキを並べる
     msg += "支給ブキ: ";
     shift.weapons.forEach(weapon => {
-        msg += weaponBadges[weapon.name];
+        const weaponBadge = weaponBadgeIdMaker(weapon.name);
+        msg += weaponBadge;
         msg += " ";
         if (weapon.name === 'ランダム') {
             random = true;
@@ -177,7 +150,6 @@ const messageMakerNext = (shift) => {
     if (random) {
         msg += "\n";
         msg += '<small>ランダムはクマブキランダムの場合があります。</small>';
-
     }
 
     return msg;
@@ -187,6 +159,7 @@ const messageMakerNext = (shift) => {
 const messageMakerNowBigRun = (shift, restOfHours) => {
     console.log('func: messageMakerNowBigRun');
     let msg = "";
+    let random = false;
     msg += ":big_run:";
     msg += "\n";
     msg += ":big_run_badge_gold: **ただいまのシフト**";
@@ -198,9 +171,17 @@ const messageMakerNowBigRun = (shift, restOfHours) => {
     // ブキを並べる
     msg += "支給ブキ: ";
     shift.weapons.forEach(weapon => {
-        msg += weaponBadges[weapon.name];
+        const weaponBadge = weaponBadgeIdMaker(weapon.name);
+        msg += weaponBadge;
         msg += " ";
+        if (weapon.name === 'ランダム') {
+            random = true;
+        }
     });
+    if (random) {
+        msg += "\n";
+        msg += '<small>ランダムはクマブキランダムの場合があります。</small>';
+    }
     msg += "\n";
 
     msg += `${format(utcToZonedTime(new Date(shift.endunix * 1000), 'Asia/Tokyo'), 'M月d日(E) HH:mm', { locale: ja })}まで`;
@@ -225,7 +206,8 @@ const messageMakerNextBigRun = (shift) => {
     // ブキを並べる
     msg += "支給ブキ: ";
     shift.weapons.forEach(weapon => {
-        msg += weaponBadges[weapon.name];
+        const weaponBadge = weaponBadgeIdMaker(weapon.name);
+        msg += weaponBadge;
         msg += " ";
         if (weapon.name === 'ランダム') {
             random = true;
@@ -234,7 +216,6 @@ const messageMakerNextBigRun = (shift) => {
     if (random) {
         msg += "\n";
         msg += '<small>ランダムはクマブキランダムの場合があります。</small>';
-
     }
 
     return msg;
@@ -257,7 +238,8 @@ const messageMakerFutureBigRun = (shift) => {
     // ブキを並べる
     msg += "支給ブキ: ";
     shift.weapons.forEach(weapon => {
-        msg += weaponBadges[weapon.name];
+        const weaponBadge = weaponBadgeIdMaker(weapon.name);
+        msg += weaponBadge;
         msg += " ";
         if (weapon.name === 'ランダム') {
             random = true;
@@ -266,7 +248,6 @@ const messageMakerFutureBigRun = (shift) => {
     if (random) {
         msg += "\n";
         msg += '<small>ランダムはクマブキランダムの場合があります。</small>';
-
     }
 
     return msg;
@@ -287,7 +268,8 @@ const messageMakerBigRunInAnHour = (shift) => {
     // ブキを並べる
     msg += "支給ブキ: ";
     shift.weapons.forEach(weapon => {
-        msg += weaponBadges[weapon.name];
+        const weaponBadge = weaponBadgeIdMaker(weapon.name);
+        msg += weaponBadge;
         msg += " ";
         if (weapon.name === 'ランダム') {
             random = true;
@@ -296,7 +278,6 @@ const messageMakerBigRunInAnHour = (shift) => {
     if (random) {
         msg += "\n";
         msg += '<small>ランダムはクマブキランダムの場合があります。</small>';
-
     }
     msg += "\n";
 
@@ -305,20 +286,6 @@ const messageMakerBigRunInAnHour = (shift) => {
     return msg;
 
 }
-
-
-// const stream = new Misskey.Stream(
-//     'https://ikaskey.bktsk.com',    
-//     {
-//         token: BOT_TOKEN    
-//     });
-
-// const mainChannel = stream.useChannel('main');
-
-// 通常ルール
-// await axios.get('https://api.koukun.jp/splatoon/3/schedules/?count=1').then(res => {
-//     console.log(res.data);
-// })
 
 // メッセージ送信用function
 const sendMessage = async (msg, visibility = null, cw = null, replyId = null) => {
@@ -490,6 +457,5 @@ const salmonrunextra = async () => {
 // スケジュール。奇数時間の正時に実行。
 // eslint-disable-next-line no-unused-vars
 const salmonjob = schedule.scheduleJob('0 0 1-23/2 * * *', () => { salmonrun() });
-// const salmonjob = schedule.scheduleJob('0 */5 * * * *', () => { salmonrun() });
 
 // salmonrun();

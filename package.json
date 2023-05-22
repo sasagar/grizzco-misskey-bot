@@ -1,6 +1,6 @@
 {
   "name": "grizzco-misskey-bot",
-  "version": "1.0.0-beta3",
+  "version": "1.0.0-beta.4",
   "description": "Misskeyにスケジュール更新を流すBotです。",
   "main": "index.js",
   "type": "module",
