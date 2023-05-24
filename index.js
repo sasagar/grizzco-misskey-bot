@@ -306,125 +306,130 @@ const sendMessage = async (msg, visibility = null, cw = null, replyId = null) =>
 
 // サーモンランルール
 const salmonrun = async () => {
-    const res = await axios.get(JSON_URL);
+    try {
+        const res = await axios.get(JSON_URL);
 
-    // もしビッグランのスケジュールがなければ
-    if (res.data.bigrun.length === 0) {
+        // もしビッグランのスケジュールがなければ
+        if (res.data.bigrun.length === 0) {
 
-        // 終了時刻を取得
-        let endUnix = res.data.regular[0].endunix;
-        // 現在時刻を取得
-        const nowUnix = getNowUnixTime();
+            // 終了時刻を取得
+            let endUnix = res.data.regular[0].endunix;
+            // 現在時刻を取得
+            const nowUnix = getNowUnixTime();
 
-        // 残り時間を計算
-        let restOfHours = Math.ceil((endUnix - nowUnix) / (60 * 60));
+            // 残り時間を計算
+            let restOfHours = Math.ceil((endUnix - nowUnix) / (60 * 60));
 
-        // もし残り時間が0時間なら次のシフトを基準にしたい
-        let i = 0;
-        if (restOfHours === 0) {
-            i = 1;
+            // もし残り時間が0時間なら次のシフトを基準にしたい
+            let i = 0;
+            if (restOfHours === 0) {
+                i = 1;
 
-            // 対象で計算し直し
-            endUnix = res.data.regular[i].endunix;
-            restOfHours = Math.ceil((endUnix - nowUnix) / (60 * 60));
-        }
+                // 対象で計算し直し
+                endUnix = res.data.regular[i].endunix;
+                restOfHours = Math.ceil((endUnix - nowUnix) / (60 * 60));
+            }
 
-        let msg = messageMakerNow(res.data.regular[i], restOfHours);
+            let msg = messageMakerNow(res.data.regular[i], restOfHours);
 
-        // もし残りが2時間なら次のシフトのお知らせを追加
-        if (restOfHours === 2) {
-            msg += "\n---\n";
-            msg += messageMakerNext(res.data.regular[i + 1]);
-
-            // 一回だけ1時間おきにしたいので、追加する
-            const extraNoteDate = new Date((res.data.regular[i].endunix - 60 * 60) * 1000);
-            console.log(extraNoteDate.toLocaleString());
-            // eslint-disable-next-line no-use-before-define
-            salmonjobExtra = schedule.scheduleJob(extraNoteDate, () => { salmonrunextra() });
-            console.log(`set: salmonrunextra at ${extraNoteDate}`);
-        }
-        console.log(msg);
-        sendMessage(msg);
-    }
-    // ビッグランのシフトがあったら
-    // 今がビッグランのシフトだったら
-    else if (res.data.bigrun[0].startunix < getNowUnixTime()) {
-        // 終了時刻を取得
-        const endUnix = res.data.bigrun[0].endunix;
-        // 現在時刻を取得
-        const nowUnix = getNowUnixTime();
-
-        // 残り時間を計算
-        const restOfHours = Math.ceil((endUnix - nowUnix) / (60 * 60));
-
-
-        // もし残り時間が0時間なら次のシフトを基準にしたい
-        let i = 0;
-        if (restOfHours === 0) {
-            i = 1;
-        }
-
-        let msg = messageMakerNowBigRun(res.data.bigrun[i], restOfHours);
-        // もし残りが2時間なら次のシフトのお知らせを追加
-        if (restOfHours === 2) {
-            msg += "\n---\n";
-            msg += messageMakerNext(res.data.regular[i + 1]);
-
-            // 一回だけ1時間おきにしたいので、追加する
-            const extraNoteDate = new Date((res.data.regular[i].endunix - 60 * 60) * 1000);
-            console.log(extraNoteDate.toLocaleString());
-            // eslint-disable-next-line no-use-before-define
-            salmonjobExtra = schedule.scheduleJob(extraNoteDate, () => { salmonrunextra() });
-            console.log(`set: salmonrunextra at ${extraNoteDate}`);
-        }
-        sendMessage(msg);
-    }
-    // この先ビッグランの予定があるときは
-    else {
-        // 終了時刻を取得
-        let endUnix = res.data.regular[0].endunix;
-        // 現在時刻を取得
-        const nowUnix = getNowUnixTime();
-
-        // 残り時間を計算
-        let restOfHours = Math.ceil((endUnix - nowUnix) / (60 * 60));
-
-        // もし残り時間が0時間なら次のシフトを基準にしたい
-        let i = 0;
-        if (restOfHours === 0) {
-            i = 1;
-
-            // 対象で計算し直し
-            endUnix = res.data.regular[i].endunix;
-            restOfHours = Math.ceil((endUnix - nowUnix) / (60 * 60));
-        }
-
-        let msg = messageMakerNow(res.data.regular[i], restOfHours);
-
-        // もし残りが2時間なら次のシフトのお知らせを追加
-        if (restOfHours === 2) {
-            // ビッグランよりも通常シフトが先なら次のシフトの情報を挟む
-            if (res.data.regular[i + 1].startunix < res.data.bigrun[0].startunix) {
+            // もし残りが2時間なら次のシフトのお知らせを追加
+            if (restOfHours === 2) {
                 msg += "\n---\n";
                 msg += messageMakerNext(res.data.regular[i + 1]);
-                msg += "\n---\n";
-                msg += messageMakerFutureBigRun(res.data.bigrun[0]);
-            }
-            // 次がビッグランだったら次の情報として繋ぐ
-            else {
-                msg += "\n---\n";
-                msg += messageMakerNextBigRun(res.data.bigrun[0]);
-            }
 
-            // 一回だけ1時間おきにしたいので、追加する
-            const extraNoteDate = new Date((res.data.regular[i].endunix - 60 * 60) * 1000);
-            console.log(extraNoteDate.toLocaleString());
-            // eslint-disable-next-line no-use-before-define
-            salmonjobExtra = schedule.scheduleJob(extraNoteDate, () => { salmonrunextra() });
-            console.log(`set: salmonrunextra at ${extraNoteDate}`);
+                // 一回だけ1時間おきにしたいので、追加する
+                const extraNoteDate = new Date((res.data.regular[i].endunix - 60 * 60) * 1000);
+                console.log(extraNoteDate.toLocaleString());
+                // eslint-disable-next-line no-use-before-define
+                salmonjobExtra = schedule.scheduleJob(extraNoteDate, () => { salmonrunextra() });
+                console.log(`set: salmonrunextra at ${extraNoteDate}`);
+            }
+            console.log(msg);
+            sendMessage(msg);
         }
+        // ビッグランのシフトがあったら
+        // 今がビッグランのシフトだったら
+        else if (res.data.bigrun[0].startunix < getNowUnixTime()) {
+            // 終了時刻を取得
+            const endUnix = res.data.bigrun[0].endunix;
+            // 現在時刻を取得
+            const nowUnix = getNowUnixTime();
 
-        sendMessage(msg);
+            // 残り時間を計算
+            const restOfHours = Math.ceil((endUnix - nowUnix) / (60 * 60));
+
+
+            // もし残り時間が0時間なら次のシフトを基準にしたい
+            let i = 0;
+            if (restOfHours === 0) {
+                i = 1;
+            }
+
+            let msg = messageMakerNowBigRun(res.data.bigrun[i], restOfHours);
+            // もし残りが2時間なら次のシフトのお知らせを追加
+            if (restOfHours === 2) {
+                msg += "\n---\n";
+                msg += messageMakerNext(res.data.regular[i + 1]);
+
+                // 一回だけ1時間おきにしたいので、追加する
+                const extraNoteDate = new Date((res.data.regular[i].endunix - 60 * 60) * 1000);
+                console.log(extraNoteDate.toLocaleString());
+                // eslint-disable-next-line no-use-before-define
+                salmonjobExtra = schedule.scheduleJob(extraNoteDate, () => { salmonrunextra() });
+                console.log(`set: salmonrunextra at ${extraNoteDate}`);
+            }
+            sendMessage(msg);
+        }
+        // この先ビッグランの予定があるときは
+        else {
+            // 終了時刻を取得
+            let endUnix = res.data.regular[0].endunix;
+            // 現在時刻を取得
+            const nowUnix = getNowUnixTime();
+
+            // 残り時間を計算
+            let restOfHours = Math.ceil((endUnix - nowUnix) / (60 * 60));
+
+            // もし残り時間が0時間なら次のシフトを基準にしたい
+            let i = 0;
+            if (restOfHours === 0) {
+                i = 1;
+
+                // 対象で計算し直し
+                endUnix = res.data.regular[i].endunix;
+                restOfHours = Math.ceil((endUnix - nowUnix) / (60 * 60));
+            }
+
+            let msg = messageMakerNow(res.data.regular[i], restOfHours);
+
+            // もし残りが2時間なら次のシフトのお知らせを追加
+            if (restOfHours === 2) {
+                // ビッグランよりも通常シフトが先なら次のシフトの情報を挟む
+                if (res.data.regular[i + 1].startunix < res.data.bigrun[0].startunix) {
+                    msg += "\n---\n";
+                    msg += messageMakerNext(res.data.regular[i + 1]);
+                    msg += "\n---\n";
+                    msg += messageMakerFutureBigRun(res.data.bigrun[0]);
+                }
+                // 次がビッグランだったら次の情報として繋ぐ
+                else {
+                    msg += "\n---\n";
+                    msg += messageMakerNextBigRun(res.data.bigrun[0]);
+                }
+
+                // 一回だけ1時間おきにしたいので、追加する
+                const extraNoteDate = new Date((res.data.regular[i].endunix - 60 * 60) * 1000);
+                console.log(extraNoteDate.toLocaleString());
+                // eslint-disable-next-line no-use-before-define
+                salmonjobExtra = schedule.scheduleJob(extraNoteDate, () => { salmonrunextra() });
+                console.log(`set: salmonrunextra at ${extraNoteDate}`);
+            }
+
+            sendMessage(msg);
+        }
+    } catch (e) {
+        console.log(e);
+        sendMessage('$[x2 :error:]\nAPIのデータに問題があるため、提示のシフトのお知らせができませんでした。');
     }
 
 }
