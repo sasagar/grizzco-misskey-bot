@@ -429,7 +429,7 @@ const salmonrun = async () => {
         }
     } catch (e) {
         console.log(e);
-        sendMessage('$[x2 :error:]\nAPIのデータに問題があるため、提示のシフトのお知らせができませんでした。');
+        sendMessage('$[x2 :error:]\nAPIのデータに問題があるため、定時のシフトのお知らせができませんでした。');
     }
 
 }
