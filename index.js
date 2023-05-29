@@ -47,6 +47,17 @@ const stageBadgeIdMaker = (name) => {
     return result;
 }
 
+// ステージ名返却
+const getStageName = (name) => {
+    let stage = "不明"
+
+    if (name !== "") {
+        stage = name;
+    }
+
+    return stage;
+}
+
 // ブキバッジ存在チェック
 const weaponBadgeIdMaker = (name) => {
     let result;
@@ -67,10 +78,12 @@ const messageMakerNow = (shift, restOfHours) => {
     const stageBadge = stageBadgeIdMaker(shift.stage);
 
     let msg = "";
+    const stage = getStageName(shift.stage);
+
     msg += ":grizzco_bronze: **ただいまのシフト**";
     msg += ` 残りおよそ **${restOfHours}時間**`;
     msg += "\n";
-    msg += `ステージ: ${stageBadge} **${shift.stage}**`;
+    msg += `ステージ: ${stageBadge} **${stage}**`;
     msg += "\n";
 
     // ブキを並べる
@@ -95,11 +108,13 @@ const messageMakerNowInAnHour = (shift) => {
 
     let msg = "";
     let random = false;
+    const stage = getStageName(shift.stage);
+
     msg += "$[shake まもなく終了！]";
     msg += ":grizzco_bronze: **ただいまのシフト**";
     msg += " 残りおよそ **1時間**";
     msg += "\n";
-    msg += `ステージ: ${stageBadge} **${shift.stage}**`;
+    msg += `ステージ: ${stageBadge} **${stage}**`;
     msg += "\n";
 
     // ブキを並べる
@@ -131,11 +146,13 @@ const messageMakerNext = (shift) => {
 
     let msg = "";
     let random = false;
+    const stage = getStageName(shift.stage);
+
     msg += ":grizzco_bronze: **次のシフト**";
     msg += "\n";
     msg += `${format(utcToZonedTime(new Date(shift.startunix * 1000), 'Asia/Tokyo'), 'M月d日(E) HH:mm', { locale: ja })}スタート！`;
     msg += "\n";
-    msg += `ステージ: ${stageBadge} **${shift.stage}**`;
+    msg += `ステージ: ${stageBadge} **${stage}**`;
     msg += "\n";
 
     // ブキを並べる
@@ -161,12 +178,14 @@ const messageMakerNowBigRun = (shift, restOfHours) => {
     console.log('func: messageMakerNowBigRun');
     let msg = "";
     let random = false;
+    const stage = getStageName(shift.stage);
+
     msg += ":big_run:";
     msg += "\n";
     msg += ":big_run_badge_gold: **ただいまのシフト**";
     msg += ` 残りおよそ **${restOfHours}時間**`;
     msg += "\n";
-    msg += `ステージ: **${shift.stage}**`;
+    msg += `ステージ: **${stage}**`;
     msg += "\n";
 
     // ブキを並べる
@@ -195,13 +214,15 @@ const messageMakerNextBigRun = (shift) => {
     console.log('func: messageMakerNextBigRun');
     let msg = "";
     let random = false;
+    const stage = getStageName(shift.stage);
+
     msg += ":big_run:";
     msg += "\n";
     msg += ":big_run_badge_gold: **次のシフト**";
     msg += "\n";
     msg += `${format(utcToZonedTime(new Date(shift.startunix * 1000), 'Asia/Tokyo'), 'M月d日(E) HH:mm', { locale: ja })}スタート！`;
     msg += "\n";
-    msg += `ステージ: **${shift.stage}**`;
+    msg += `ステージ: **${stage}**`;
     msg += "\n";
 
     // ブキを並べる
@@ -227,13 +248,15 @@ const messageMakerFutureBigRun = (shift) => {
     console.log('func: messageMakerFutureBigRun');
     let msg = "";
     let random = false;
+    const stage = getStageName(shift.stage);
+
     msg += ":big_run:";
     msg += "\n";
     msg += ":big_run_badge_gold: **ビッグランのお知らせ**";
     msg += "\n";
     msg += `${format(utcToZonedTime(new Date(shift.startunix * 1000), 'Asia/Tokyo'), 'M月d日(E) HH:mm', { locale: ja })}スタート！`;
     msg += "\n";
-    msg += `ステージ: **${shift.stage}**`;
+    msg += `ステージ: **${stage}**`;
     msg += "\n";
 
     // ブキを並べる
@@ -259,11 +282,13 @@ const messageMakerBigRunInAnHour = (shift) => {
     console.log('func: messageMakerNowInAnHour');
     let msg = "";
     let random = false;
+    const stage = getStageName(shift.stage);
+
     msg += "$[shake まもなく終了！] :big_run:";
     msg += ":big_run_badge_gold: **ただいまのビッグラン**";
     msg += " 残りおよそ **1時間**";
     msg += "\n";
-    msg += `ステージ: **${shift.stage}**`;
+    msg += `ステージ: **${stage}**`;
     msg += "\n";
 
     // ブキを並べる
