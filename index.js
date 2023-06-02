@@ -1,319 +1,59 @@
 /* eslint-disable camelcase */
 import * as Misskey from 'misskey-js';
 import axios from 'axios';
-import fs from 'fs';
-import { format, utcToZonedTime } from 'date-fns-tz';
-// eslint-disable-next-line import/extensions
-import ja from 'date-fns/locale/ja/index.js';
 import schedule from 'node-schedule';
 import * as dotenv from 'dotenv';
+
+// eslint-disable-next-line import/extensions
+import MessageMaker from './message-maker.js';
 
 // 設定項目読み込み
 dotenv.config();
 const { BOT_TOKEN, MISSKEY_URL, JSON_URL, npm_package_version } = process.env;
 
 // Misskeyへ接続
+/**
+ * Misskey Client
+ * @since v1.0.0
+ * @type {Misskey}
+ * @instance
+ */
 const cli = new Misskey.api.APIClient(
     {
         origin: MISSKEY_URL,
         credential: BOT_TOKEN
     });
 
-// ステージのバッジを選べるように
-const stageBadges = JSON.parse(fs.readFileSync('./JSON/stages.json'));
-
 // 追加用のスケジューラーを空で用意
+/**
+ * Blank variable for scheduler.
+ * @since v1.0.0
+ * @type {schedule}
+ */
 let salmonjobExtra;
 
-// ブキのバッジを選べるように
-const weaponBadges = JSON.parse(fs.readFileSync('./JSON/weapons.json'));
 
 // 現在時刻を取得する
+/**
+ * Get UNIX Time now.
+ * @since v1.0.0
+ * @return {string} - UNIX time now.
+ */
 const getNowUnixTime = () => {
     const now = Date.now() / 1000;
     return now;
 }
 
-// ステージバッジ存在チェック
-const stageBadgeIdMaker = (name) => {
-    let result;
-
-    if (Reflect.has(stageBadges, name)) {
-        result = stageBadges[name];
-    } else {
-        result = "";
-    }
-
-    return result;
-}
-
-// ステージ名返却
-const getStageName = (name) => {
-    let stage = "不明"
-
-    if (name !== "") {
-        stage = name;
-    }
-
-    return stage;
-}
-
-// ブキバッジ存在チェック
-const weaponBadgeIdMaker = (name) => {
-    let result;
-
-    if (Reflect.has(weaponBadges, name)) {
-        result = weaponBadges[name];
-    } else {
-        result = name;
-    }
-
-    return result;
-}
-
-
-// 今のシフトメッセージメーカー
-const messageMakerNow = (shift, restOfHours) => {
-    console.log('func: messageMakerNow');
-    const stageBadge = stageBadgeIdMaker(shift.stage);
-
-    let msg = "";
-    const stage = getStageName(shift.stage);
-
-    msg += ":grizzco_bronze: **ただいまのシフト**";
-    msg += ` 残りおよそ **${restOfHours}時間**`;
-    msg += "\n";
-    msg += `ステージ: ${stageBadge} **${stage}**`;
-    msg += "\n";
-
-    // ブキを並べる
-    msg += "支給ブキ: ";
-    shift.weapons.forEach(weapon => {
-        const weaponBadge = weaponBadgeIdMaker(weapon.name);
-        msg += weaponBadge;
-        msg += " ";
-    });
-    msg += "\n";
-
-    msg += `${format(utcToZonedTime(new Date(shift.endunix * 1000), 'Asia/Tokyo'), 'M月d日(E) HH:mm', { locale: ja })}まで`;
-
-    return msg;
-
-}
-
-// 今のシフトまもなく終了バージョン
-const messageMakerNowInAnHour = (shift) => {
-    console.log('func: messageMakerNowInAnHour');
-    const stageBadge = stageBadgeIdMaker(shift.stage);
-
-    let msg = "";
-    let random = false;
-    const stage = getStageName(shift.stage);
-
-    msg += "$[shake まもなく終了！]";
-    msg += ":grizzco_bronze: **ただいまのシフト**";
-    msg += " 残りおよそ **1時間**";
-    msg += "\n";
-    msg += `ステージ: ${stageBadge} **${stage}**`;
-    msg += "\n";
-
-    // ブキを並べる
-    msg += "支給ブキ: ";
-    shift.weapons.forEach(weapon => {
-        const weaponBadge = weaponBadgeIdMaker(weapon.name);
-        msg += weaponBadge;
-        msg += " ";
-        if (weapon.name === 'ランダム') {
-            random = true;
-        }
-    });
-    if (random) {
-        msg += "\n";
-        msg += '<small>ランダムはクマブキランダムの場合があります。</small>';
-    }
-    msg += "\n";
-
-    msg += `${format(utcToZonedTime(new Date(shift.endunix * 1000), 'Asia/Tokyo'), 'M月d日(E) HH:mm', { locale: ja })}まで`;
-
-    return msg;
-
-}
-
-// 次のシフトメッセージメーカー
-const messageMakerNext = (shift) => {
-    console.log('func: messageMakerNext');
-    const stageBadge = stageBadgeIdMaker(shift.stage);
-
-    let msg = "";
-    let random = false;
-    const stage = getStageName(shift.stage);
-
-    msg += ":grizzco_bronze: **次のシフト**";
-    msg += "\n";
-    msg += `${format(utcToZonedTime(new Date(shift.startunix * 1000), 'Asia/Tokyo'), 'M月d日(E) HH:mm', { locale: ja })}スタート！`;
-    msg += "\n";
-    msg += `ステージ: ${stageBadge} **${stage}**`;
-    msg += "\n";
-
-    // ブキを並べる
-    msg += "支給ブキ: ";
-    shift.weapons.forEach(weapon => {
-        const weaponBadge = weaponBadgeIdMaker(weapon.name);
-        msg += weaponBadge;
-        msg += " ";
-        if (weapon.name === 'ランダム') {
-            random = true;
-        }
-    });
-    if (random) {
-        msg += "\n";
-        msg += '<small>ランダムはクマブキランダムの場合があります。</small>';
-    }
-
-    return msg;
-}
-
-// 今のビッグランメッセージメーカー
-const messageMakerNowBigRun = (shift, restOfHours) => {
-    console.log('func: messageMakerNowBigRun');
-    let msg = "";
-    let random = false;
-    const stage = getStageName(shift.stage);
-
-    msg += ":big_run:";
-    msg += "\n";
-    msg += ":big_run_badge_gold: **ただいまのシフト**";
-    msg += ` 残りおよそ **${restOfHours}時間**`;
-    msg += "\n";
-    msg += `ステージ: **${stage}**`;
-    msg += "\n";
-
-    // ブキを並べる
-    msg += "支給ブキ: ";
-    shift.weapons.forEach(weapon => {
-        const weaponBadge = weaponBadgeIdMaker(weapon.name);
-        msg += weaponBadge;
-        msg += " ";
-        if (weapon.name === 'ランダム') {
-            random = true;
-        }
-    });
-    if (random) {
-        msg += "\n";
-        msg += '<small>ランダムはクマブキランダムの場合があります。</small>';
-    }
-    msg += "\n";
-
-    msg += `${format(utcToZonedTime(new Date(shift.endunix * 1000), 'Asia/Tokyo'), 'M月d日(E) HH:mm', { locale: ja })}まで`;
-
-    return msg;
-}
-
-// 次のビッグランメッセージメーカー
-const messageMakerNextBigRun = (shift) => {
-    console.log('func: messageMakerNextBigRun');
-    let msg = "";
-    let random = false;
-    const stage = getStageName(shift.stage);
-
-    msg += ":big_run:";
-    msg += "\n";
-    msg += ":big_run_badge_gold: **次のシフト**";
-    msg += "\n";
-    msg += `${format(utcToZonedTime(new Date(shift.startunix * 1000), 'Asia/Tokyo'), 'M月d日(E) HH:mm', { locale: ja })}スタート！`;
-    msg += "\n";
-    msg += `ステージ: **${stage}**`;
-    msg += "\n";
-
-    // ブキを並べる
-    msg += "支給ブキ: ";
-    shift.weapons.forEach(weapon => {
-        const weaponBadge = weaponBadgeIdMaker(weapon.name);
-        msg += weaponBadge;
-        msg += " ";
-        if (weapon.name === 'ランダム') {
-            random = true;
-        }
-    });
-    if (random) {
-        msg += "\n";
-        msg += '<small>ランダムはクマブキランダムの場合があります。</small>';
-    }
-
-    return msg;
-}
-
-// この先のビッグランメッセージメーカー
-const messageMakerFutureBigRun = (shift) => {
-    console.log('func: messageMakerFutureBigRun');
-    let msg = "";
-    let random = false;
-    const stage = getStageName(shift.stage);
-
-    msg += ":big_run:";
-    msg += "\n";
-    msg += ":big_run_badge_gold: **ビッグランのお知らせ**";
-    msg += "\n";
-    msg += `${format(utcToZonedTime(new Date(shift.startunix * 1000), 'Asia/Tokyo'), 'M月d日(E) HH:mm', { locale: ja })}スタート！`;
-    msg += "\n";
-    msg += `ステージ: **${stage}**`;
-    msg += "\n";
-
-    // ブキを並べる
-    msg += "支給ブキ: ";
-    shift.weapons.forEach(weapon => {
-        const weaponBadge = weaponBadgeIdMaker(weapon.name);
-        msg += weaponBadge;
-        msg += " ";
-        if (weapon.name === 'ランダム') {
-            random = true;
-        }
-    });
-    if (random) {
-        msg += "\n";
-        msg += '<small>ランダムはクマブキランダムの場合があります。</small>';
-    }
-
-    return msg;
-}
-
-// 今のシフトまもなく終了バージョン ビッグラン
-const messageMakerBigRunInAnHour = (shift) => {
-    console.log('func: messageMakerNowInAnHour');
-    let msg = "";
-    let random = false;
-    const stage = getStageName(shift.stage);
-
-    msg += "$[shake まもなく終了！] :big_run:";
-    msg += ":big_run_badge_gold: **ただいまのビッグラン**";
-    msg += " 残りおよそ **1時間**";
-    msg += "\n";
-    msg += `ステージ: **${stage}**`;
-    msg += "\n";
-
-    // ブキを並べる
-    msg += "支給ブキ: ";
-    shift.weapons.forEach(weapon => {
-        const weaponBadge = weaponBadgeIdMaker(weapon.name);
-        msg += weaponBadge;
-        msg += " ";
-        if (weapon.name === 'ランダム') {
-            random = true;
-        }
-    });
-    if (random) {
-        msg += "\n";
-        msg += '<small>ランダムはクマブキランダムの場合があります。</small>';
-    }
-    msg += "\n";
-
-    msg += `${format(utcToZonedTime(new Date(shift.endunix * 1000), 'Asia/Tokyo'), 'M月d日(E) HH:mm', { locale: ja })}まで`;
-
-    return msg;
-
-}
-
 // メッセージ送信用function
+/**
+ * Send message to Misskey.
+ * @since v1.0.0
+ * @param {string} msg - Message to send. 
+ * @param {boolean} visibility - Flag of visibility.
+ * @param {boolean} cw - Flag of CW.
+ * @param {string} replyId - User ID to reply.
+ * @returns {void}
+ */
 const sendMessage = async (msg, visibility = null, cw = null, replyId = null) => {
     console.log('func: sendMessage');
     const args = { text: msg };
@@ -330,6 +70,11 @@ const sendMessage = async (msg, visibility = null, cw = null, replyId = null) =>
 }
 
 // サーモンランルール
+/**
+ * Make and send message to Misskey.
+ * @since v1.0.0
+ * @returns {void}
+ */
 const salmonrun = async () => {
     try {
         const res = await axios.get(JSON_URL);
@@ -355,12 +100,15 @@ const salmonrun = async () => {
                 restOfHours = Math.ceil((endUnix - nowUnix) / (60 * 60));
             }
 
-            let msg = messageMakerNow(res.data.regular[i], restOfHours);
+            const now = new MessageMaker(res.data.regular[i], restOfHours);
+            let msg = now.maker();
 
             // もし残りが2時間なら次のシフトのお知らせを追加
             if (restOfHours === 2) {
+                const next = new MessageMaker(res.data.regular[i + 1], 40, false, true);
+
                 msg += "\n---\n";
-                msg += messageMakerNext(res.data.regular[i + 1]);
+                msg += next.maker();
 
                 // 一回だけ1時間おきにしたいので、追加する
                 const extraNoteDate = new Date((res.data.regular[i].endunix - 60 * 60) * 1000);
@@ -390,11 +138,14 @@ const salmonrun = async () => {
                 i = 1;
             }
 
-            let msg = messageMakerNowBigRun(res.data.bigrun[i], restOfHours);
+            const now = new MessageMaker(res.data.bigrun[i], restOfHours, false, false, true);
+            let msg = now.maker();
             // もし残りが2時間なら次のシフトのお知らせを追加
             if (restOfHours === 2) {
+                const next = new MessageMaker(res.data.regular[i + 1], 40, false, true);
+
                 msg += "\n---\n";
-                msg += messageMakerNext(res.data.regular[i + 1]);
+                msg += next.maker();
 
                 // 一回だけ1時間おきにしたいので、追加する
                 const extraNoteDate = new Date((res.data.regular[i].endunix - 60 * 60) * 1000);
@@ -425,21 +176,26 @@ const salmonrun = async () => {
                 restOfHours = Math.ceil((endUnix - nowUnix) / (60 * 60));
             }
 
-            let msg = messageMakerNow(res.data.regular[i], restOfHours);
+            const now = new MessageMaker(res.data.regular[i], restOfHours);
+            let msg = now.maker();
 
             // もし残りが2時間なら次のシフトのお知らせを追加
             if (restOfHours === 2) {
                 // ビッグランよりも通常シフトが先なら次のシフトの情報を挟む
                 if (res.data.regular[i + 1].startunix < res.data.bigrun[0].startunix) {
+                    const next = new MessageMaker(res.data.regular[i + 1], 40, false, true);
+                    const bigrun = new MessageMaker(res.data.bigrun[0], 48, false, false, true, false, true);
+
                     msg += "\n---\n";
-                    msg += messageMakerNext(res.data.regular[i + 1]);
+                    msg += next.maker();
                     msg += "\n---\n";
-                    msg += messageMakerFutureBigRun(res.data.bigrun[0]);
+                    msg += bigrun.maker();
                 }
                 // 次がビッグランだったら次の情報として繋ぐ
                 else {
+                    const bigrun = new MessageMaker(res.data.bigrun[0], 48, false, true, true, false, true);
                     msg += "\n---\n";
-                    msg += messageMakerNextBigRun(res.data.bigrun[0]);
+                    msg += bigrun.maker();
                 }
 
                 // 一回だけ1時間おきにしたいので、追加する
@@ -453,13 +209,18 @@ const salmonrun = async () => {
             sendMessage(msg);
         }
     } catch (e) {
-        console.log(e);
+        console.error(e);
         sendMessage('$[x2 :error:]\nAPIのデータに問題があるため、定時のシフトのお知らせができませんでした。');
     }
 
 }
 
 // 追加で1時間分流す時の分
+/**
+ * Send the last hour message to Misskey
+ * @since v1.0.0
+ * @returns {void}
+ */
 const salmonrunextra = async () => {
     const res = await axios.get(JSON_URL);
 
@@ -467,16 +228,19 @@ const salmonrunextra = async () => {
     const nowUnix = getNowUnixTime();
 
     let msg = ''
-    // レギュラ;ーが時間内だったら、レギュラーを対象にする。それ以外はビッグラン扱い。
+    // レギュラーが時間内だったら、レギュラーを対象にする。それ以外はビッグラン扱い。
     if (res.data.regular[0].startunix < nowUnix && res.data.regular[0].endunix > nowUnix) {
-
-        msg += messageMakerNowInAnHour(res.data.regular[0]);
+        const now = new MessageMaker(res.data.regular[0], 1, true);
+        const next = new MessageMaker(res.data.regular[1], 40, false, true);
+        msg += now.maker();
         msg += "\n---\n";
-        msg += messageMakerNext(res.data.regular[1]);
+        msg += next.maker();
     } else {
-        msg += messageMakerBigRunInAnHour(res.data.bigrun[0]);
+        const now = new MessageMaker(res.data.bigrun[0], 1, true, false, true);
+        const next = new MessageMaker(res.data.regular[0], 40, false, true);
+        msg += now.maker();
         msg += "\n---\n";
-        msg += messageMakerNext(res.data.regular[0]);
+        msg += next.maker();
     }
 
     console.log(msg);
@@ -486,12 +250,22 @@ const salmonrunextra = async () => {
 }
 
 // スケジュール。奇数時間の正時に実行。
+/**
+ * Regular schedule.
+ * @since v1.0.0
+ * @type {schedule}
+ */
 // eslint-disable-next-line no-unused-vars
 const salmonjob = schedule.scheduleJob('0 0 1-23/2 * * *', () => { salmonrun() });
 
 // salmonrun();
 
 // 起動時メッセージ
+/**
+ * Send up message to misskey
+ * @since v1.0.0
+ * @returns {void}
+ */
 const upNotice = () => {
     sendMessage(`【Bot再起動通知】v${npm_package_version} で起動しました。`);
 }
