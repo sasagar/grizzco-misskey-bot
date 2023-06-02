@@ -20,5 +20,8 @@ module.exports = {
     ],
     "rules": {
         "no-console": "off",
-    }
+    },
+    "ignorePatterns": [
+        "**/docs/*"
+    ]
 }
