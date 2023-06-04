@@ -18,14 +18,15 @@ jobs:
 
       - run: npm install
 
-      - name: Build
-        uses: andstor/jsdoc-action@v1
-        with:
-          source_dir: ./
-          output_dir: ./docs
-          config_file: jsdoc.json
-          #   template: minami
-          front_page: README.md
+      - run: npm run doc
+      # - name: Build
+      #   uses: andstor/jsdoc-action@v1
+      #   with:
+      #     source_dir: ./
+      #     output_dir: ./docs
+      #     config_file: jsdoc.json
+      #     #   template: minami
+      #     front_page: README.md
 
       # - name: Deploy
       #   uses: peaceiris/actions-gh-pages@v3
