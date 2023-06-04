@@ -142,13 +142,13 @@ const salmonrun = async () => {
             let msg = now.maker();
             // もし残りが2時間なら次のシフトのお知らせを追加
             if (restOfHours === 2) {
-                const next = new MessageMaker(res.data.regular[i + 1], 40, false, true);
+                const next = new MessageMaker(res.data.regular[0], 40, false, true);
 
                 msg += "\n---\n";
                 msg += next.maker();
 
                 // 一回だけ1時間おきにしたいので、追加する
-                const extraNoteDate = new Date((res.data.regular[i].endunix - 60 * 60) * 1000);
+                const extraNoteDate = new Date((res.data.bigrun[0].endunix - 60 * 60) * 1000);
                 console.log(extraNoteDate.toLocaleString());
                 // eslint-disable-next-line no-use-before-define
                 salmonjobExtra = schedule.scheduleJob(extraNoteDate, () => { salmonrunextra() });
@@ -204,6 +204,12 @@ const salmonrun = async () => {
                 // eslint-disable-next-line no-use-before-define
                 salmonjobExtra = schedule.scheduleJob(extraNoteDate, () => { salmonrunextra() });
                 console.log(`set: salmonrunextra at ${extraNoteDate}`);
+            }
+            // ビッグランの情報を付ける
+            else {
+                const bigrun = new MessageMaker(res.data.bigrun[0], 48, false, false, true, false, true);
+                msg += "\n---\n";
+                msg += bigrun.maker();
             }
 
             sendMessage(msg);
