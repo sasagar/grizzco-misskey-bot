@@ -138,6 +138,8 @@ const MessageMaker = class {
             msg += "**ただいまのシフト**";
         }
 
+        msg += "\n";
+
         if (this.isNext || this.isFutureBigRun) {
             msg += `${format(utcToZonedTime(new Date(this.shift.startunix * 1000), 'Asia/Tokyo'), 'M月d日(E) HH:mm', { locale: ja })}スタート！`;
         } else {
