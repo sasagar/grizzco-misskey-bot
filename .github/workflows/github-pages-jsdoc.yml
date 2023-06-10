@@ -21,20 +21,6 @@ jobs:
 
       - name: Build JSDoc
         run: npm run doc -R ./README.md
-      # - name: Build
-      #   uses: andstor/jsdoc-action@v1
-      #   with:
-      #     source_dir: ./
-      #     output_dir: ./docs
-      #     config_file: jsdoc.json
-      #     #   template: minami
-      #     front_page: README.md
-
-      # - name: Deploy
-      #   uses: peaceiris/actions-gh-pages@v3
-      #   with:
-      #     github_token: ${{ secrets.GITHUB_TOKEN }}
-      #     publish_dir: ./docs
 
       - name: Setup Pages
         uses: actions/configure-pages@v3

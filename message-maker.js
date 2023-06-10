@@ -143,7 +143,7 @@ const MessageMaker = class {
         if (this.isNext || this.isFutureBigRun) {
             msg += `${format(utcToZonedTime(new Date(this.shift.startunix * 1000), 'Asia/Tokyo'), 'M月d日(E) HH:mm', { locale: ja })}スタート！`;
         } else {
-            msg += ` 残りおよそ **${this.restOfHours}時間**`;
+            msg += `残りおよそ **${this.restOfHours}時間**`;
         }
 
         msg += "\n";
