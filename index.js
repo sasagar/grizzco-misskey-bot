@@ -233,17 +233,25 @@ const salmonrunextra = async () => {
     // 現在時刻を取得
     const nowUnix = getNowUnixTime();
 
+    const { regular, bigrun } = res.data;
+
     let msg = ''
     // レギュラーが時間内だったら、レギュラーを対象にする。それ以外はビッグラン扱い。
-    if (res.data.regular[0].startunix < nowUnix && res.data.regular[0].endunix > nowUnix) {
-        const now = new MessageMaker(res.data.regular[0], 1, true);
-        const next = new MessageMaker(res.data.regular[1], 40, false, true);
+    if (regular[0].startunix < nowUnix && regular[0].endunix > nowUnix) {
+        const now = new MessageMaker(regular[0], 1, true);
+        let nextShift;
+        if (bigrun.length === 0 || regular[1].startunix < bigrun[0].startunix) {
+            [, nextShift] = regular;
+        } else {
+            [nextShift] = bigrun;
+        }
+        const next = new MessageMaker(nextShift, 40, false, true);
         msg += now.maker();
         msg += "\n---\n";
         msg += next.maker();
     } else {
-        const now = new MessageMaker(res.data.bigrun[0], 1, true, false, true);
-        const next = new MessageMaker(res.data.regular[0], 40, false, true);
+        const now = new MessageMaker(bigrun[0], 1, true, false, true);
+        const next = new MessageMaker(regular[0], 40, false, true);
         msg += now.maker();
         msg += "\n---\n";
         msg += next.maker();
