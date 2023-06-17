@@ -11,6 +11,8 @@ import MessageMaker from './message-maker.js';
 dotenv.config();
 const { BOT_TOKEN, MISSKEY_URL, JSON_URL, npm_package_version } = process.env;
 
+process.title = 'Grizzco Misskey Bot';
+
 // Misskeyへ接続
 /**
  * Misskey Client
@@ -271,6 +273,27 @@ const salmonrunextra = async () => {
  */
 // eslint-disable-next-line no-unused-vars
 const salmonjob = schedule.scheduleJob('0 0 1-23/2 * * *', () => { salmonrun() });
+
+/**
+ * Return time.
+ * @since v1.0.1
+ * @param {int} restOfHours - Rest of hours of the shift.
+ * @param {Object} data - Shift object.
+ * @param {int} nowUnix - Unix Time of now.
+ * @returns {Object} - New end time and new rest of hours.
+ */
+// const returnTime = (restOfHours, data, nowUnix) => {
+//     let newEndUnix;
+//     let newRestOfHours;
+//     if (restOfHours === 0) {
+//         newEndUnix = data[1].endunix;
+//         newRestOfHours = Math.ceil((newEndUnix - nowUnix) / (60 * 60));
+//     } else {
+//         newEndUnix = data[0].endunix;
+//         newRestOfHours = Math.ceil((newEndUnix - nowUnix) / (60 * 60));
+//     }
+//     return { newEndUnix, newRestOfHours };
+// }
 
 // salmonrun();
 
