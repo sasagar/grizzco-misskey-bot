@@ -128,12 +128,18 @@ const MessageMaker = class {
 
         msg += " ";
 
-        if (this.isNext) {
+        if (this.isNext && this.isContest) {
+            msg += ":eggstra_work:**のお知らせ**";
+            msg += ":btc_gold:";
+        } else if (this.isNext && !this.isContest) {
             msg += "**次のシフト**";
         } else if (this.isFutureBigRun) {
             msg += "**ビッグランのお知らせ**";
         } else if (this.isBigRun) {
             msg += "**ただいまのビッグラン**";
+        } else if (this.isContest) {
+            msg += "**開催中の**:eggstra_work:"
+            msg += ":btc_gold:";
         } else {
             msg += "**ただいまのシフト**";
         }
