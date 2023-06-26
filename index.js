@@ -80,14 +80,14 @@ const sendMessage = async (msg, visibility = null, cw = null, replyId = null) =>
 const salmonrun = async () => {
     try {
         const res = await axios.get(JSON_URL);
+        // 現在時刻を取得
+        const nowUnix = getNowUnixTime();
 
         // もしビッグランのスケジュールがなければ
         if (res.data.bigrun.length === 0) {
 
             // 終了時刻を取得
             let endUnix = res.data.regular[0].endunix;
-            // 現在時刻を取得
-            const nowUnix = getNowUnixTime();
 
             // 残り時間を計算
             let restOfHours = Math.ceil((endUnix - nowUnix) / (60 * 60));
@@ -127,8 +127,6 @@ const salmonrun = async () => {
         else if (res.data.bigrun[0].startunix < getNowUnixTime()) {
             // 終了時刻を取得
             const endUnix = res.data.bigrun[0].endunix;
-            // 現在時刻を取得
-            const nowUnix = getNowUnixTime();
 
             // 残り時間を計算
             const restOfHours = Math.ceil((endUnix - nowUnix) / (60 * 60));
@@ -162,8 +160,6 @@ const salmonrun = async () => {
         else {
             // 終了時刻を取得
             let endUnix = res.data.regular[0].endunix;
-            // 現在時刻を取得
-            const nowUnix = getNowUnixTime();
 
             // 残り時間を計算
             let restOfHours = Math.ceil((endUnix - nowUnix) / (60 * 60));
@@ -215,6 +211,19 @@ const salmonrun = async () => {
             }
 
             sendMessage(msg);
+        }
+
+        if (res.data.teamcontest.length > 0) {
+            if (res.data.teamcontest[0].startunix > nowUnix) {
+                const teamcontest = new MessageMaker(res.data.teamcontest[0], 48, false, true, false, true, false);
+                sendMessage(teamcontest.maker());
+            } else {
+                // 残り時間を計算
+                const restOfHours = Math.ceil((res.data.teamcontest[0].endunix - nowUnix) / (60 * 60));
+
+                const teamcontest = new MessageMaker(res.data.teamcontest[0], restOfHours, false, false, false, true, false);
+                sendMessage(teamcontest.maker());
+            }
         }
     } catch (e) {
         console.error(e);
