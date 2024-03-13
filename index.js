@@ -9,7 +9,7 @@ import MessageMaker from './message-maker.js';
 
 // 設定項目読み込み
 dotenv.config();
-const { BOT_TOKEN, MISSKEY_URL, JSON_URL, npm_package_version } = process.env;
+const { BOT_TOKEN, MISSKEY_URL, JSON_URL, npm_package_version, BTM_JSON_URL } = process.env;
 
 process.title = 'Grizzco Misskey Bot';
 
@@ -80,14 +80,20 @@ const sendMessage = async (msg, visibility = null, cw = null, replyId = null) =>
 const salmonrun = async () => {
     try {
         const res = await axios.get(JSON_URL);
+
+        // スケジュールを分類
+        const regular = res.data.results.filter((shift) => shift.is_big_run === false);
+        const bigrun = res.data.results.filter((shift) => shift.is_big_run === true);
+
         // 現在時刻を取得
         const nowUnix = getNowUnixTime();
 
         // もしビッグランのスケジュールがなければ
-        if (res.data.bigrun.length === 0) {
+        if (bigrun.length === 0) {
 
             // 終了時刻を取得
-            let endUnix = res.data.regular[0].endunix;
+            let end = new Date(regular[0].end_time);
+            let endUnix = end.getTime() / 1000;
 
             // 残り時間を計算
             let restOfHours = Math.ceil((endUnix - nowUnix) / (60 * 60));
@@ -98,22 +104,24 @@ const salmonrun = async () => {
                 i = 1;
 
                 // 対象で計算し直し
-                endUnix = res.data.regular[i].endunix;
+                end = new Date(regular[i].end_time);
+                endUnix = end.getTime() / 1000;
                 restOfHours = Math.ceil((endUnix - nowUnix) / (60 * 60));
             }
 
-            const now = new MessageMaker(res.data.regular[i], restOfHours);
+            const now = new MessageMaker(regular[i], restOfHours);
             let msg = now.maker();
 
             // もし残りが2時間なら次のシフトのお知らせを追加
             if (restOfHours === 2) {
-                const next = new MessageMaker(res.data.regular[i + 1], 40, false, true);
+                const next = new MessageMaker(regular[i + 1], 40, false, true);
 
                 msg += "\n---\n";
                 msg += next.maker();
 
                 // 一回だけ1時間おきにしたいので、追加する
-                const extraNoteDate = new Date((res.data.regular[i].endunix - 60 * 60) * 1000);
+                const extraDate = new Date(regular[i].end_time);
+                const extraNoteDate = ((extraDate.getTime() / 1000) - 60 * 60) * 1000;
                 console.log(extraNoteDate.toLocaleString());
                 // eslint-disable-next-line no-use-before-define
                 salmonjobExtra = schedule.scheduleJob(extraNoteDate, () => { salmonrunextra() });
@@ -124,9 +132,10 @@ const salmonrun = async () => {
         }
         // ビッグランのシフトがあったら
         // 今がビッグランのシフトだったら
-        else if (res.data.bigrun[0].startunix < getNowUnixTime()) {
+        else if (Date(bigrun[0].start_time).getTime() / 1000 < getNowUnixTime()) {
             // 終了時刻を取得
-            const endUnix = res.data.bigrun[0].endunix;
+            const end = new Date(bigrun[0].end_time);
+            const endUnix = end.getTime() / 1000;
 
             // 残り時間を計算
             const restOfHours = Math.ceil((endUnix - nowUnix) / (60 * 60));
@@ -138,17 +147,18 @@ const salmonrun = async () => {
                 i = 1;
             }
 
-            const now = new MessageMaker(res.data.bigrun[i], restOfHours, false, false, true);
+            const now = new MessageMaker(bigrun[i], restOfHours, false, false, true);
             let msg = now.maker();
             // もし残りが2時間なら次のシフトのお知らせを追加
             if (restOfHours === 2) {
-                const next = new MessageMaker(res.data.regular[0], 40, false, true);
+                const next = new MessageMaker(regular[0], 40, false, true);
 
                 msg += "\n---\n";
                 msg += next.maker();
 
                 // 一回だけ1時間おきにしたいので、追加する
-                const extraNoteDate = new Date((res.data.bigrun[0].endunix - 60 * 60) * 1000);
+                const extraDate = new Date(regular[0].end_time);
+                const extraNoteDate = ((extraDate.getTime() / 1000) - 60 * 60) * 1000;
                 console.log(extraNoteDate.toLocaleString());
                 // eslint-disable-next-line no-use-before-define
                 salmonjobExtra = schedule.scheduleJob(extraNoteDate, () => { salmonrunextra() });
@@ -159,7 +169,8 @@ const salmonrun = async () => {
         // この先ビッグランの予定があるときは
         else {
             // 終了時刻を取得
-            let endUnix = res.data.regular[0].endunix;
+            let end = new Date(bigrun[0].end_time);
+            let endUnix = end.getTime() / 1000;
 
             // 残り時間を計算
             let restOfHours = Math.ceil((endUnix - nowUnix) / (60 * 60));
@@ -170,34 +181,36 @@ const salmonrun = async () => {
                 i = 1;
 
                 // 対象で計算し直し
-                endUnix = res.data.regular[i].endunix;
+                end = new Date(bigrun[i].end_time);
+                endUnix = end.getTime() / 1000;
                 restOfHours = Math.ceil((endUnix - nowUnix) / (60 * 60));
             }
 
-            const now = new MessageMaker(res.data.regular[i], restOfHours);
+            const now = new MessageMaker(regular[i], restOfHours);
             let msg = now.maker();
 
             // もし残りが2時間なら次のシフトのお知らせを追加
             if (restOfHours === 2) {
                 // ビッグランよりも通常シフトが先なら次のシフトの情報を挟む
-                if (res.data.regular[i + 1].startunix < res.data.bigrun[0].startunix) {
-                    const next = new MessageMaker(res.data.regular[i + 1], 40, false, true);
-                    const bigrun = new MessageMaker(res.data.bigrun[0], 48, false, false, true, false, true);
+                if (Date(regular[i + 1].start_time) < DataView(bigrun[0].start_time)) {
+                    const next = new MessageMaker(regular[i + 1], 40, false, true);
+                    const nextbigrun = new MessageMaker(bigrun[0], 48, false, false, true, false, true);
 
                     msg += "\n---\n";
                     msg += next.maker();
                     msg += "\n---\n";
-                    msg += bigrun.maker();
+                    msg += nextbigrun.maker();
                 }
                 // 次がビッグランだったら次の情報として繋ぐ
                 else {
-                    const bigrun = new MessageMaker(res.data.bigrun[0], 48, false, true, true, false, true);
+                    const nextbigrun = new MessageMaker(bigrun[0], 48, false, true, true, false, true);
                     msg += "\n---\n";
-                    msg += bigrun.maker();
+                    msg += nextbigrun.maker();
                 }
 
                 // 一回だけ1時間おきにしたいので、追加する
-                const extraNoteDate = new Date((res.data.regular[i].endunix - 60 * 60) * 1000);
+                const extraDate = new Date(regular[0].end_time);
+                const extraNoteDate = ((extraDate.getTime() / 1000) - 60 * 60) * 1000;
                 console.log(extraNoteDate.toLocaleString());
                 // eslint-disable-next-line no-use-before-define
                 salmonjobExtra = schedule.scheduleJob(extraNoteDate, () => { salmonrunextra() });
@@ -205,24 +218,27 @@ const salmonrun = async () => {
             }
             // ビッグランの情報を付ける
             else {
-                const bigrun = new MessageMaker(res.data.bigrun[0], 48, false, false, true, false, true);
+                const nextbigrun = new MessageMaker(bigrun[0], 48, false, false, true, false, true);
                 msg += "\n---\n";
-                msg += bigrun.maker();
+                msg += nextbigrun.maker();
             }
 
             sendMessage(msg);
         }
 
-        if (res.data.teamcontest.length > 0) {
-            if (res.data.teamcontest[0].startunix > nowUnix) {
-                const teamcontest = new MessageMaker(res.data.teamcontest[0], 48, false, true, false, true, false);
-                sendMessage(teamcontest.maker());
+        const teamcontestRes = await axios.get(BTM_JSON_URL);
+        const teamcontest = teamcontestRes.data.results;
+
+        if (teamcontest.length > 0) {
+            if (Date(teamcontest[0].start_time).getTime() / 1000 > nowUnix) {
+                const nextteamcontest = new MessageMaker(teamcontest[0], 48, false, true, false, true, false);
+                sendMessage(nextteamcontest.maker());
             } else {
                 // 残り時間を計算
-                const restOfHours = Math.ceil((res.data.teamcontest[0].endunix - nowUnix) / (60 * 60));
+                const restOfHours = Math.ceil(((Date(teamcontest[0].end_time).getTime() / 1000) - nowUnix) / (60 * 60));
 
-                const teamcontest = new MessageMaker(res.data.teamcontest[0], restOfHours, false, false, false, true, false);
-                sendMessage(teamcontest.maker());
+                const nextteamcontest = new MessageMaker(teamcontest[0], restOfHours, false, false, false, true, false);
+                sendMessage(nextteamcontest.maker());
             }
         }
     } catch (e) {
@@ -244,14 +260,17 @@ const salmonrunextra = async () => {
     // 現在時刻を取得
     const nowUnix = getNowUnixTime();
 
-    const { regular, bigrun } = res.data;
+    // スケジュールを分類
+    const regular = res.data.results.filter((shift) => shift.is_big_run === false);
+    const bigrun = res.data.results.filter((shift) => shift.is_big_run === true);
+    // const { regular, bigrun } = res.data;
 
     let msg = ''
     // レギュラーが時間内だったら、レギュラーを対象にする。それ以外はビッグラン扱い。
-    if (regular[0].startunix < nowUnix && regular[0].endunix > nowUnix) {
+    if ((Date(regular[0].start_time).getTime() / 1000) < nowUnix && (Date(regular[0].end_time).getTime() / 1000) > nowUnix) {
         const now = new MessageMaker(regular[0], 1, true);
         let nextShift;
-        if (bigrun.length === 0 || regular[1].startunix < bigrun[0].startunix) {
+        if (bigrun.length === 0 || Date(regular[1].start_time) < Date(bigrun[0].start_time)) {
             [, nextShift] = regular;
         } else {
             [nextShift] = bigrun;
@@ -313,6 +332,7 @@ const salmonjob = schedule.scheduleJob('0 0 1-23/2 * * *', () => { salmonrun() }
  * @returns {void}
  */
 const upNotice = () => {
+    console.log('[upNotice] Misskey bot up!');
     sendMessage(`【Bot再起動通知】v${npm_package_version} で起動しました。`);
 }
 
