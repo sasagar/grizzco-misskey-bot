@@ -1,4 +1,4 @@
-import fs from 'fs';
+import * as fs from 'node:fs';
 import { format, utcToZonedTime } from 'date-fns-tz';
 // eslint-disable-next-line import/extensions
 import ja from 'date-fns/locale/ja/index.js';
@@ -50,8 +50,8 @@ const MessageMaker = class {
     get stageBadgeId() {
         let result;
 
-        if (Reflect.has(this.stageBadges, this.shift.stage)) {
-            result = this.stageBadges[this.shift.stage];
+        if (Reflect.has(this.stageBadges, this.shift.stage.name)) {
+            result = this.stageBadges[this.shift.stage.name];
         } else {
             result = "";
         }
@@ -69,7 +69,7 @@ const MessageMaker = class {
         let stage = "不明"
 
         if (this.shift.stage !== "") {
-            stage = this.shift.stage;
+            stage = this.shift.stage.name;
         }
 
         return stage;
@@ -147,7 +147,7 @@ const MessageMaker = class {
         msg += "\n";
 
         if (this.isNext || this.isFutureBigRun) {
-            msg += `${format(utcToZonedTime(new Date(this.shift.startunix * 1000), 'Asia/Tokyo'), 'M月d日(E) HH:mm', { locale: ja })}スタート！`;
+            msg += `${format(utcToZonedTime(new Date(this.shift.start_time), 'Asia/Tokyo'), 'M月d日(E) HH:mm', { locale: ja })}スタート！`;
         } else {
             msg += `残りおよそ **${this.restOfHours}時間**`;
         }
@@ -162,14 +162,17 @@ const MessageMaker = class {
 
         // ブキを並べる
         msg += "支給ブキ: ";
-        this.shift.weapons.forEach(weapon => {
+
+        const { weapons } = this.shift;
+        // eslint-disable-next-line no-restricted-syntax
+        for (const weapon of weapons) {
             const weaponBadge = this.weaponBadgeIdMaker(weapon.name);
             msg += weaponBadge;
             msg += " ";
             if (weapon.name === 'ランダム') {
                 random = true;
             }
-        });
+        }
 
         if (random) {
             msg += "\n";
@@ -178,7 +181,7 @@ const MessageMaker = class {
 
         if (this.isNext || this.isFutureBigRun) {
             msg += "\n";
-            msg += `${format(utcToZonedTime(new Date(this.shift.endunix * 1000), 'Asia/Tokyo'), 'M月d日(E) HH:mm', { locale: ja })}まで`;
+            msg += `${format(utcToZonedTime(new Date(this.shift.end_time), 'Asia/Tokyo'), 'M月d日(E) HH:mm', { locale: ja })}まで`;
         }
 
         return msg;
