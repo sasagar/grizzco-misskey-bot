@@ -19,7 +19,7 @@
   },
   "homepage": "https://github.com/sasagar/grizzco-misskey-bot#readme",
   "dependencies": {
-    "axios": "^1.4.0",
+    "axios": "^1.6.0",
     "date-fns": "^2.30.0",
     "date-fns-tz": "^2.0.0",
     "dotenv": "^16.0.3",
