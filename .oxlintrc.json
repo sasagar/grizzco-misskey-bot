@@ -1,0 +1,17 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "env": {
+    "node": true,
+    "builtin": true
+  },
+  "globals": {
+    "fetch": "readonly",
+    "Temporal": "readonly"
+  },
+  "plugins": ["import", "node", "promise", "unicorn", "oxc"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn"
+  },
+  "ignorePatterns": ["docs", "node_modules", "JSON"]
+}

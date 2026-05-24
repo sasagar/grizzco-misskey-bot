@@ -1,40 +1,39 @@
 {
   "name": "grizzco-misskey-bot",
-  "version": "1.3.1",
+  "version": "2.0.0",
   "description": "Misskeyにスケジュール更新を流すBotです。",
-  "main": "index.js",
-  "type": "module",
-  "scripts": {
-    "start": "node index.js",
-    "doc": "jsdoc -c ./jsdoc.json"
+  "homepage": "https://github.com/sasagar/grizzco-misskey-bot#readme",
+  "bugs": {
+    "url": "https://github.com/sasagar/grizzco-misskey-bot/issues"
   },
+  "license": "GPL-3.0",
+  "author": "@sasagar",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/sasagar/grizzco-misskey-bot.git"
   },
-  "author": "@sasagar",
-  "license": "GPL-3.0",
-  "bugs": {
-    "url": "https://github.com/sasagar/grizzco-misskey-bot/issues"
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "doc": "jsdoc -c ./jsdoc.json",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check ."
   },
-  "homepage": "https://github.com/sasagar/grizzco-misskey-bot#readme",
   "dependencies": {
-    "axios": "^1.4.0",
-    "date-fns": "^2.30.0",
-    "date-fns-tz": "^2.0.0",
-    "dotenv": "^16.0.3",
-    "misskey-js": "^0.0.15",
+    "dotenv": "^17.4.2",
+    "misskey-js": "^2026.5.4",
     "node-schedule": "^2.1.1"
   },
   "devDependencies": {
-    "clean-jsdoc-theme": "^4.2.7",
-    "eslint": "^8.40.0",
-    "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-config-prettier": "^8.8.0",
-    "eslint-plugin-import": "^2.27.5",
-    "eslint-plugin-prettier": "^4.2.1",
-    "eslint-plugin-vue": "^9.12.0",
-    "jsdoc": "^4.0.2",
-    "prettier": "^2.8.8"
+    "clean-jsdoc-theme": "^4.3.2",
+    "jsdoc": "^4.0.5",
+    "oxfmt": "^0.51.0",
+    "oxlint": "^1.66.0"
+  },
+  "engines": {
+    "node": ">=26"
   }
 }
