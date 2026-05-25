@@ -13,7 +13,7 @@ RUN npm install
 
 COPY . .
 
-ENV NODE_ENV production
+ENV NODE_ENV=production
 ENV TZ="Asia/Tokyo"
 ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so.2
 
