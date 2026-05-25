@@ -29,6 +29,19 @@ version-resolver:
       - 'patch'
   default: patch
 autolabeler:
+  # --- version-resolver 用のラベル（semver 自動判定） ---
+  - label: major
+    title:
+      - '/^\w+(\(.+\))?!:/' # 例: feat!:, fix(scope)!: のような破壊的変更
+    body:
+      - '/BREAKING[ -]CHANGE/'
+  - label: minor
+    title:
+      - '/^feat(\(.+\))?:/'
+  - label: patch
+    title:
+      - '/^fix(\(.+\))?:/'
+  # --- categories 用のラベル（変更履歴の分類） ---
   - label: feature
     title:
       - '/^feat(ure)?:.+/'
