@@ -6,7 +6,12 @@
 
 ## What
 
-Post Grizzco (Co-op mode of Splatoon 3 a.k.a. Salmon Run Next Wave) schedule to Misskey.
+Splatoon 3 のスケジュール更新を Misskey に投稿する Bot です。
+
+- **Coop (サーモンラン / バチコン)** — `GRIZZCO_BOT_TOKEN` で指定したアカウントから投稿
+- **Battle (レギュラー / バンカラ オープン・チャレンジ / X / イベント)** — `BANKARA_BOT_TOKEN` で指定したアカウントから投稿
+
+v3.0.0 から旧 `bankara-misskey-bot` を統合し、1コンテナで2アカウント運用に対応しました。
 
 ## Getting started
 
